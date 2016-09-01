@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">cameraDemo</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_to_take_picture">跳转照相</string>
+    <string name="action_to_record_video">跳转录制视频</string>
+</resources>
