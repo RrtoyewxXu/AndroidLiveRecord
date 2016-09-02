@@ -1,8 +1,10 @@
 package com.rrtoyewx.camerademo;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -11,6 +13,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.view.SurfaceHolder.Callback;
 import static android.view.SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS;
@@ -25,11 +29,21 @@ public class CameraPreviewLayout extends SurfaceView {
     private Context mContext;
 
 
-
     private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
             savePhoto(data);
+        }
+    };
+
+    private Camera.FaceDetectionListener faceDetectionListener = new Camera.FaceDetectionListener() {
+        @Override
+        public void onFaceDetection(Camera.Face[] faces, Camera camera) {
+            for (int i = 0; i < faces.length; i++) {
+                Camera.Face face = faces[i];
+                Log.e(Constants.TAG, "id" + face.id + "score" + face.score + "rect" + face.rect
+                        + "leftEye" + face.leftEye + "mouth" + face.mouth + "rightEye" + face.rightEye);
+            }
         }
     };
 
@@ -38,11 +52,28 @@ public class CameraPreviewLayout extends SurfaceView {
         public void surfaceCreated(SurfaceHolder holder) {
             try {
                 mCamera = CameraUtil.getCameraInstance();
-                Log.e(Constants.TAG, mCamera.getParameters().getSupportedPictureFormats().toString());
+                Log.e(Constants.TAG, "getSupportedPictureFormats" + mCamera.getParameters().getSupportedPictureFormats().toString());
+                Log.e(Constants.TAG, "getSupportedFocusModes:" + mCamera.getParameters().getSupportedFocusModes().toString());
+                Log.e(Constants.TAG, "getSupportedFlashModes:" + mCamera.getParameters().getSupportedFlashModes().toString());
+                Camera.Parameters parameters = mCamera.getParameters();
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
 
-                mCamera.setDisplayOrientation(90);
+                mCamera.setParameters(parameters);
+                mCamera.setFaceDetectionListener(faceDetectionListener);
+                mCamera.setPreviewCallback(new Camera.PreviewCallback() {
+                    @Override
+                    public void onPreviewFrame(byte[] data, Camera camera) {
+                        Log.e(Constants.TAG,data.toString()+"setPreviewCallback");
+                    }
+                });
+                mCamera.startFaceDetection();
+
+                //  mCamera.setDisplayOrientation(90);
                 mCamera.setPreviewDisplay(holder);
                 mCamera.startPreview();
+
+
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -60,6 +91,7 @@ public class CameraPreviewLayout extends SurfaceView {
             try {
                 mCamera.setPreviewDisplay(holder);
                 mCamera.startPreview();
+                mCamera.startFaceDetection();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -119,8 +151,51 @@ public class CameraPreviewLayout extends SurfaceView {
     }
 
     public void takePicture() {
-        mCamera.takePicture(null, null, null, mPictureCallback);
+        mCamera.autoFocus(new Camera.AutoFocusCallback() {
+            @Override
+            public void onAutoFocus(boolean success, Camera camera) {
+                Log.e(Constants.TAG, "success:" + success);
+                mCamera.takePicture(null, null, null, mPictureCallback);
+            }
+        });
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                Rect rect = calculateFocusArea((int) event.getX(), (int) event.getY());
+                Camera.Parameters parameters = mCamera.getParameters();
 
+                if (parameters.getMaxNumMeteringAreas() > 0) {
+                    List<Camera.Area> meteringAreas = new ArrayList<Camera.Area>();
+                    meteringAreas.add(new Camera.Area(rect, 600));
+
+                    parameters.setMeteringAreas(meteringAreas);
+                }
+
+                if (parameters.getMaxNumFocusAreas() > 0) {
+                    List<Camera.Area> focusAreas = new ArrayList<Camera.Area>();
+                    focusAreas.add(new Camera.Area(rect, 600));
+
+                    parameters.setFocusAreas(focusAreas);
+                }
+
+                mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean success, Camera camera) {
+                        Log.e(Constants.TAG, "onTouchEvent success:" + success);
+                    }
+                });
+
+                return true;
+
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    private Rect calculateFocusArea(int x, int y) {
+        return new Rect(x - 50, y - 50, x + 50, y + 50);
+    }
 }

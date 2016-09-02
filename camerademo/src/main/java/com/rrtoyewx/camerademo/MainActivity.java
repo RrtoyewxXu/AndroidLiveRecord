@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout mPreviewContainer;
     private CameraPreviewLayout mCameraPreviewLayout;
     private Button mTakePicButton;
-    private Button mEnterVideoRecordButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,18 +42,7 @@ public class MainActivity extends AppCompatActivity {
         mTakePicButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Camera camera = mCameraPreviewLayout.getCamera();
-                camera.release();
-                camera = null;
                 mCameraPreviewLayout.takePicture();
-            }
-        });
-
-        mEnterVideoRecordButton = (Button) findViewById(R.id.btn_enter_record_video);
-        mEnterVideoRecordButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, VideoRecordActivity.class));
             }
         });
     }
