@@ -1,1 +1,1 @@
-include ':app', ':mediacodecdemo', ':camerademo'
+include ':stamp', ':mediacodecdemo', ':camerademo', ':bytebuffertest'
