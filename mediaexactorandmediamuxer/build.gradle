@@ -5,8 +5,8 @@ android {
     buildToolsVersion "24.0.2"
 
     defaultConfig {
-        applicationId "com.rrtoyewx.mediacodecdemo"
-        minSdkVersion 18
+        applicationId "com.rrtoyewx.mediaexactorandmediamuxer"
+        minSdkVersion 15
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"

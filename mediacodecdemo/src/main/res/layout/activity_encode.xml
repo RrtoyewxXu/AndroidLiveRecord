@@ -3,16 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.rrtoyewx.mediacodecdemo.MainActivity">
+    tools:context="com.rrtoyewx.mediacodecdemo.EncodeActivity">
 
     <Button
-        android:id="@+id/encode_camera_video"
-        android:layout_width="wrap_content"
+        android:id="@+id/btn_encode"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="encode camera video" />
+        android:text="encode camera video"/>
+
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </LinearLayout>

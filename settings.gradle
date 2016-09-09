@@ -1,1 +1,1 @@
-include ':stamp', ':mediacodecdemo', ':camerademo', ':bytebuffertest', ':mediarecoderdemo'
+include ':stamp', ':mediacodecdemo', ':camerademo', ':bytebuffertest', ':mediarecoderdemo', ':blur-behind', ':audiovideorecordingdemo', ':mediaexactorandmediamuxer'
