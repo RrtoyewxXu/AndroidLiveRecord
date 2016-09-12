@@ -14,12 +14,25 @@
         android:id="@+id/exactor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="exactor" />
+        android:text="分离" />
 
     <Button
         android:id="@+id/muxer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="muxer" />
+        android:text="分离视频" />
+
+    <Button
+        android:id="@+id/muxer_audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="分离音频" />
+
+    <Button android:id="@+id/combine_video"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="合成视频"/>
+
+
 
 </LinearLayout>
