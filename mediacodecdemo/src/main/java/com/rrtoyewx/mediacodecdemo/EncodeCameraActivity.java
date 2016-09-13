@@ -5,27 +5,24 @@ import android.hardware.Camera;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
-import android.media.MediaRecorder;
-import android.support.v7.app.AppCompatActivity;
+import android.media.MediaMuxer;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+public class EncodeCameraActivity extends AppCompatActivity implements SurfaceHolder.Callback {
     String encodeType = "video/avc";
     int cameraWidth = 640;
     int cameraHeight = 480;
-    int bitRate = 125000;
-    int frameRate = 30;
+    int bitRate = 1300 * 1000;
+    int frameRate = 24;
 
     Button encodeBtn;
     SurfaceView surfaceView;
@@ -33,12 +30,11 @@ public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.C
 
     Camera camera;
     MediaCodec mediaEncoder;
-    MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-
+    MediaMuxer mediaMuxer;
+    long recordTime = 0;
 
     byte[] mediaInputByte = new byte[cameraWidth * cameraHeight / 2 * 3];
-    private long startTime;
-    private FileOutputStream fileOutStream;
+    private int videoTrackIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,54 +55,64 @@ public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.C
 
     private void encodeVideo() {
         camera.addCallbackBuffer(new byte[cameraWidth * cameraHeight / 2 * 3]);
-        startTime = System.currentTimeMillis();
-        try {
-            fileOutStream = new FileOutputStream(new File(getExternalCacheDir(), "encodeVideo"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        camera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback() {
-            @Override
-            public void onPreviewFrame(byte[] data, Camera camera) {
-                Log.d("fuck", "get previewFrame");
-
-                //data = yv12 ->yuv420sp
-                swapYV12toYUV420SemiPlanar(data, mediaInputByte, cameraWidth, cameraHeight);
-                Log.e("fuck", "data:" + data + "mediaInputByte:" + mediaInputByte);
-                saveData(mediaInputByte);
-                camera.addCallbackBuffer(data);
-            }
-        });
         mediaEncoder.start();
+        recordTime = System.nanoTime();
+        final long startTime = System.currentTimeMillis();
+        new Thread() {
+            @Override
+            public void run() {
+                while (Math.abs(System.currentTimeMillis() - startTime) < 10 * 1000) {
+                    camera.setPreviewCallbackWithBuffer(new Camera.PreviewCallback() {
+                        @Override
+                        public void onPreviewFrame(final byte[] data, Camera camera) {
+                            try {
+                                swapYV12toYUV420SemiPlanar(data, mediaInputByte, cameraWidth, cameraHeight);
+                                saveData(mediaInputByte);
+                                EncodeCameraActivity.this.camera.addCallbackBuffer(data);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                }
+
+                Log.e("tag", "finish");
+                releaseMediaMuxer();
+                releaseMediaEncoder();
+            }
+
+        }.start();
     }
 
     private void saveData(byte[] mediaInputByte) {
         ByteBuffer[] inputBuffers = mediaEncoder.getInputBuffers();
         ByteBuffer[] outputBuffers = mediaEncoder.getOutputBuffers();
+
         int inputIndex = mediaEncoder.dequeueInputBuffer(-1);
         if (inputIndex >= 0) {
             ByteBuffer inputBuffer = inputBuffers[inputIndex];
             inputBuffer.clear();
             inputBuffer.put(mediaInputByte);
-            mediaEncoder.queueInputBuffer(inputIndex, 0, mediaInputByte.length, System.currentTimeMillis() - startTime, 0);
+            mediaEncoder.queueInputBuffer(inputIndex, 0, mediaInputByte.length, Math.abs(recordTime - System.nanoTime()) / 1000, 0);
         }
 
-        int outputIndex = mediaEncoder.dequeueOutputBuffer(bufferInfo, 2000);
-        while (outputIndex >= 0) {
-            outputBuffers = mediaEncoder.getOutputBuffers();
-            ByteBuffer outputBuffer = outputBuffers[outputIndex];
-            byte[] outData = new byte[bufferInfo.size];
-            outputBuffer.get(outData);
+        MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+        int outputBufferIndex = -1;
+        do {
+            outputBufferIndex = mediaEncoder.dequeueOutputBuffer(bufferInfo, 2000);
+            if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                videoTrackIndex = mediaMuxer.addTrack(mediaEncoder.getOutputFormat());
+                mediaMuxer.start();
+            } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+                outputBuffers = mediaEncoder.getOutputBuffers();
+            } else if (outputBufferIndex >= 0) {
 
-            try {
-                fileOutStream.write(outData, 0, bufferInfo.size);
-            } catch (IOException e) {
-                e.printStackTrace();
+                ByteBuffer outputBuffer = outputBuffers[outputBufferIndex];
+                mediaMuxer.writeSampleData(videoTrackIndex, outputBuffer, bufferInfo);
+
+                mediaEncoder.releaseOutputBuffer(outputBufferIndex, false);
             }
-            mediaEncoder.releaseOutputBuffer(outputIndex, false);
-            outputIndex = mediaEncoder.dequeueOutputBuffer(bufferInfo, 2000);
-        }
-
+        } while (outputBufferIndex >= 0);
 
     }
 
@@ -114,6 +120,7 @@ public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.C
     public void surfaceCreated(SurfaceHolder holder) {
         initCamera();
         initMediaEncoder();
+        initMediaMuxer();
     }
 
     @Override
@@ -138,6 +145,7 @@ public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.C
         Camera.Parameters parameters = camera.getParameters();
         parameters.setPreviewSize(640, 480);
         parameters.setPictureSize(640, 480);
+        //yv12
         parameters.setPreviewFormat(ImageFormat.YV12);
         camera.setParameters(parameters);
     }
@@ -157,8 +165,9 @@ public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.C
             MediaFormat mediaFormat = MediaFormat.createVideoFormat(encodeType, cameraWidth, cameraHeight);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, frameRate);
+            //yuv420sp
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar);
-            mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 5);
+            mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2);
             mediaEncoder.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
 
         } catch (IOException e) {
@@ -172,6 +181,19 @@ public class EncodeActivity extends AppCompatActivity implements SurfaceHolder.C
             mediaEncoder.release();
             mediaEncoder = null;
         }
+    }
+
+    private void initMediaMuxer() {
+        try {
+            mediaMuxer = new MediaMuxer(getExternalCacheDir().getAbsolutePath() + "/from_camera", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void releaseMediaMuxer() {
+        mediaMuxer.stop();
+        mediaMuxer.release();
     }
 
     private void swapYV12toYUV420SemiPlanar(byte[] yv12bytes, byte[] i420bytes, int width, int height) {

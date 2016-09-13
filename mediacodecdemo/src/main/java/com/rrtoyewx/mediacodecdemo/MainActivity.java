@@ -8,17 +8,25 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity {
     Button encodeCameraBtn;
+    Button encodeSurfaceBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         encodeCameraBtn = (Button) findViewById(R.id.encode_camera_video);
+        encodeSurfaceBtn = (Button) findViewById(R.id.encode_surface_video);
 
         encodeCameraBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, EncodeActivity.class));
+                startActivity(new Intent(MainActivity.this, EncodeCameraActivity.class));
+            }
+        });
+        encodeSurfaceBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, EncoderSurfaceActivity.class));
             }
         });
 

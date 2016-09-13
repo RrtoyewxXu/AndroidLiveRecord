@@ -19,7 +19,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".EncodeActivity"></activity>
+        <activity android:name=".EncodeCameraActivity" />
+        <activity android:name=".EncoderSurfaceActivity"></activity>
     </application>
 
 </manifest>

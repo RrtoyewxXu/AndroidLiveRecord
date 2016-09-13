@@ -3,23 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
-    tools:context="com.rrtoyewx.mediacodecdemo.MainActivity">
+    tools:context="com.rrtoyewx.mediacodecdemo.EncoderSurfaceActivity">
 
     <Button
-        android:id="@+id/encode_camera_video"
+        android:id="@+id/btn_encode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="从Camera采集生成视频" />
-
-    <Button
-        android:id="@+id/encode_surface_video"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="从Surface采集生成视频" />
+        android:text="开始采集" />
 
 </LinearLayout>
