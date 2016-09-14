@@ -20,7 +20,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".EncodeCameraActivity" />
-        <activity android:name=".EncoderSurfaceActivity"></activity>
+        <activity android:name=".EncoderSurfaceActivity" />
+        <activity android:name=".DecodeMp4Activity"/>
     </application>
 
 </manifest>

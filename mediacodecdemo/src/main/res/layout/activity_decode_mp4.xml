@@ -3,28 +3,27 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
-    tools:context="com.rrtoyewx.mediacodecdemo.MainActivity">
+    tools:context="com.rrtoyewx.mediacodecdemo.DecodeMp4Activity">
+    <TextView
+        android:id="@+id/stamp_time"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"/>
 
     <Button
-        android:id="@+id/encode_camera_video"
+        android:id="@+id/decode_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="从Camera采集生成视频" />
+        android:text="解码视频" />
 
-    <Button
-        android:id="@+id/encode_surface_video"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="从Surface采集生成视频" />
-    <Button
-        android:id="@+id/decode_surface_video"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="从sd卡中读取mp4文件并显示surface上" />
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"/>
+
 
 </LinearLayout>

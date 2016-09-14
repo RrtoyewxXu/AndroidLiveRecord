@@ -7,9 +7,9 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -20,14 +20,14 @@ import java.nio.ByteBuffer;
 
 public class EncoderSurfaceActivity extends AppCompatActivity {
     Button encodeBtn;
-    private MediaCodec mediaCodec;
-    private MediaMuxer mediaMuxer;
+    MediaCodec mediaCodec;
+    MediaMuxer mediaMuxer;
 
-    private Surface surface;
-
+    Surface surface;
     Paint paint;
+
     String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/output_surface";
-    private int writeTrackIndex = -1;
+    int writeTrackIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,12 +49,15 @@ public class EncoderSurfaceActivity extends AppCompatActivity {
     }
 
     private void init() {
+        //初始化编码器
         initMediaCodec();
+        //初始化视频合成器
         initMediaMuxer();
+        //初始化画笔，用来绘制
         initPaint();
     }
 
-    private void encode(){
+    private void encode() {
         new Thread() {
             @Override
             public void run() {
@@ -62,8 +65,9 @@ public class EncoderSurfaceActivity extends AppCompatActivity {
                 int frameIndex = 0;
 
                 while (remainFrame) {
-                    long time = computePresentationTimeMs(frameIndex);
+                    //编码
                     drainEncoder(false);
+                    long time = computePresentationTimeMs(frameIndex);
                     remainFrame = renderFromSource(time);
                     frameIndex++;
                 }
@@ -76,13 +80,17 @@ public class EncoderSurfaceActivity extends AppCompatActivity {
 
     private void initMediaCodec() {
         try {
-            mediaCodec = MediaCodec.createEncoderByType("video/avc");
+            // 创建mediaFormat
             MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", 640, 480);
             mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
             mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 1250000);
             mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2);
             mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 25);
+
+            //H.264 video coding
+            mediaCodec = MediaCodec.createEncoderByType("video/avc");
             mediaCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            // 创建收集的surface
             surface = mediaCodec.createInputSurface();
             mediaCodec.start();
         } catch (IOException e) {
@@ -103,20 +111,23 @@ public class EncoderSurfaceActivity extends AppCompatActivity {
         paint.setTextSize(50);
     }
 
+
     private boolean renderFromSource(long time) {
         Canvas canvas = surface.lockCanvas(null);
+        //绘制画布
         boolean frameRemain = renderFrame(canvas, time, 1000 / 25);
         surface.unlockCanvasAndPost(canvas);
         return frameRemain;
     }
 
     public boolean renderFrame(Canvas canvas, long time, long interval) {
-        Log.e("fuck", "renderFrame" + time);
+        // 绘制背景
         paint.setColor(Color.GREEN);
         canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
 
+        //绘制数字
         paint.setColor(Color.WHITE);
-        canvas.drawText(String.format("%.2f", (float) time / 1000f), 100, 100, paint);
+        canvas.drawText(String.format("%.2f", (float) time / 1000f), canvas.getWidth() / 2, canvas.getHeight() / 2, paint);
 
         return time + interval <= 10 * 1000;
     }
@@ -126,39 +137,43 @@ public class EncoderSurfaceActivity extends AppCompatActivity {
     }
 
     private void drainEncoder(boolean endOfStream) {
+
         if (endOfStream) {
             mediaCodec.signalEndOfInputStream();
         }
 
         ByteBuffer[] encoderOutputBuffers = mediaCodec.getOutputBuffers();
         MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-
         while (true) {
             int encoderStatus = mediaCodec.dequeueOutputBuffer(bufferInfo, 12000);
-            Log.e("fuck", "encoderStatus" + encoderStatus);
+
             if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 if (!endOfStream) {
                     break;
                 }
-            } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
 
+            } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
                 encoderOutputBuffers = mediaCodec.getOutputBuffers();
             } else if (encoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-
                 MediaFormat newFormat = mediaCodec.getOutputFormat();
-                Log.d("fcuk", "encoder output format changed: " + newFormat);
+                Log.d("tag", "encoder output format changed: " + newFormat);
 
                 writeTrackIndex = mediaMuxer.addTrack(newFormat);
                 mediaMuxer.start();
 
             } else if (encoderStatus >= 0) {
-                Log.e("fuck", "encodedData");
+
+                if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                    bufferInfo.size = 0;
+                }
+
                 ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
                 if (bufferInfo.size != 0) {
                     encodedData.position(bufferInfo.offset);
                     encodedData.limit(bufferInfo.offset + bufferInfo.size);
                     if (writeTrackIndex >= 0) {
-                        Log.e("fuck", "write data");
+                        Log.e("tag", "write data");
+                        //写数据
                         mediaMuxer.writeSampleData(writeTrackIndex, encodedData, bufferInfo);
                     }
                 }

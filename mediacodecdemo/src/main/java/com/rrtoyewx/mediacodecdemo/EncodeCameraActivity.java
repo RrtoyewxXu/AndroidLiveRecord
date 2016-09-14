@@ -7,6 +7,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -35,6 +36,7 @@ public class EncodeCameraActivity extends AppCompatActivity implements SurfaceHo
 
     byte[] mediaInputByte = new byte[cameraWidth * cameraHeight / 2 * 3];
     private int videoTrackIndex;
+    String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/from_camera";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,7 +187,7 @@ public class EncodeCameraActivity extends AppCompatActivity implements SurfaceHo
 
     private void initMediaMuxer() {
         try {
-            mediaMuxer = new MediaMuxer(getExternalCacheDir().getAbsolutePath() + "/from_camera", MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+            mediaMuxer = new MediaMuxer(filePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         } catch (IOException e) {
             e.printStackTrace();
         }
