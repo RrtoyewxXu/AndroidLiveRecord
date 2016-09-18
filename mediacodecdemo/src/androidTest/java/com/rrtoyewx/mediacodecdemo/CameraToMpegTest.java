@@ -138,18 +138,18 @@ public class CameraToMpegTest extends AndroidTestCase {
                 // fragment shaders for video editing, this provides a visual indication of
                 // the frame rate: if the camera is capturing at 15fps, the colors will change
                 // once per second.
-                if ((frameCount % 15) == 0) {
-                    String fragmentShader = null;
-                    if ((frameCount & 0x01) != 0) {
-                        fragmentShader = SWAPPED_FRAGMENT_SHADER;
-                    }
-                    mStManager.changeFragmentShader(fragmentShader);
-                }
+//                if ((frameCount % 15) == 0) {
+//                    String fragmentShader = null;
+//                    if ((frameCount & 0x01) != 0) {
+//                        fragmentShader = SWAPPED_FRAGMENT_SHADER;
+//                    }
+//                    mStManager.changeFragmentShader(fragmentShader);
+//                }
                 frameCount++;
 
                 // Acquire a new frame of input, and render it to the Surface.  If we had a
                 // GLSurfaceView we could switch EGL contexts and call drawImage() a second
-                // time to render it on screen.  The texture can be shared between contexts by
+                // time to render it on screen.The texture can be shared between contexts by
                 // passing the GLSurfaceView's EGLContext as eglCreateContext()'s share_context
                 // argument.
                 mStManager.awaitNewImage();
