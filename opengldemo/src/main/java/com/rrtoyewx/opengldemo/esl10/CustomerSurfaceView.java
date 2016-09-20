@@ -1,8 +1,7 @@
-package com.rrtoyewx.opengldemo;
+package com.rrtoyewx.opengldemo.esl10;
 
 import android.content.Context;
 
-import android.opengl.GLSurfaceView;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 

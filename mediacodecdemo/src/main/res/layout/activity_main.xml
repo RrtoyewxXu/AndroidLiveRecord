@@ -27,4 +27,6 @@
         android:layout_height="wrap_content"
         android:text="从sd卡中读取mp4文件并显示surface上" />
 
+
+
 </LinearLayout>

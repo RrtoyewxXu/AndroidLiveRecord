@@ -1,4 +1,4 @@
-package com.rrtoyewx.opengldemo;
+package com.rrtoyewx.opengldemo.esl10;
 
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;

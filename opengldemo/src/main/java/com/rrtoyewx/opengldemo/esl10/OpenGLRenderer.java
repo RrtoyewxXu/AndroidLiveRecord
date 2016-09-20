@@ -1,4 +1,4 @@
-package com.rrtoyewx.opengldemo;
+package com.rrtoyewx.opengldemo.esl10;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;

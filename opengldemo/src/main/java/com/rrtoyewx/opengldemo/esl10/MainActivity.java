@@ -1,8 +1,10 @@
-package com.rrtoyewx.opengldemo;
+package com.rrtoyewx.opengldemo.esl10;
 
 import android.opengl.GLSurfaceView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.rrtoyewx.opengldemo.R;
 
 public class MainActivity extends AppCompatActivity {
     GLSurfaceView glSurfaceView;
@@ -11,7 +13,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         glSurfaceView = (GLSurfaceView) findViewById(R.id.gl_surface_view);
-        glSurfaceView.setRenderer(new LineSurfaceRenderer());
+        glSurfaceView.setRenderer(new PointSurfaceRenderer());
     }
 
     @Override
