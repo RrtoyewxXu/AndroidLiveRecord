@@ -232,7 +232,7 @@
 //    private void encodeDecodeVideoFromSurfaceToSurface() throws Exception {
 //        MediaCodec encoder = null;
 //        MediaCodec decoder = null;
-//        InputSurface inputSurface = null;
+//        CodecInputSurface inputSurface = null;
 //        OutputSurface outputSurface = null;
 //        mLargestColorDelta = -1;
 //        try {
@@ -266,7 +266,7 @@
 //            // our desired properties.  Request a Surface to use for input.
 //            encoder = MediaCodec.createByCodecName(codecInfo.getName());
 //            encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-//            inputSurface = new InputSurface(encoder.createInputSurface());
+//            inputSurface = new CodecInputSurface(encoder.createInputSurface());
 //            encoder.start();
 //            doEncodeDecodeVideoFromSurfaceToSurface(encoder, inputSurface, colorFormat, decoder, outputSurface);
 //        } finally {
@@ -608,7 +608,7 @@
 //     * Does the actual work for encoding and decoding from Surface to Surface.
 //     */
 //    private void doEncodeDecodeVideoFromSurfaceToSurface(MediaCodec encoder,
-//                                                         InputSurface inputSurface, int encoderColorFormat, MediaCodec decoder,
+//                                                         CodecInputSurface inputSurface, int encoderColorFormat, MediaCodec decoder,
 //                                                         OutputSurface outputSurface) {
 //        final int TIMEOUT_USEC = 10000;
 //        ByteBuffer[] encoderOutputBuffers = encoder.getOutputBuffers();

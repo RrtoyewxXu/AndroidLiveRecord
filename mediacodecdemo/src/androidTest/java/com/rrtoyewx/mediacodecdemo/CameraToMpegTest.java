@@ -613,20 +613,7 @@ public class CameraToMpegTest extends AndroidTestCase {
             mTextureRender = new CameraToMpegTest.STextureRender();
             mTextureRender.surfaceCreated();
 
-            if (VERBOSE) Log.d(TAG, "textureID=" + mTextureRender.getTextureId());
             mSurfaceTexture = new SurfaceTexture(mTextureRender.getTextureId());
-
-            // This doesn't work if this object is created on the thread that CTS started for
-            // these test cases.
-            //
-            // The CTS-created thread has a Looper, and the SurfaceTexture constructor will
-            // create a Handler that uses it.  The "frame available" message is delivered
-            // there, but since we're not a Looper-based thread we'll never see it.  For
-            // this to do anything useful, OutputSurface must be created on a thread without
-            // a Looper, so that SurfaceTexture uses the main application Looper instead.
-            //
-            // Java language note: passing "this" out of a constructor is generally unwise,
-            // but we should be able to get away with it here.
             mSurfaceTexture.setOnFrameAvailableListener(this);
         }
 
@@ -766,7 +753,6 @@ public class CameraToMpegTest extends AndroidTestCase {
         }
 
         public void drawFrame(SurfaceTexture st) {
-            checkGlError("onDrawFrame start");
             st.getTransformMatrix(mSTMatrix);
 
             // (optional) clear to green so we can see if we're failing to set pixels
@@ -782,23 +768,18 @@ public class CameraToMpegTest extends AndroidTestCase {
             mTriangleVertices.position(TRIANGLE_VERTICES_DATA_POS_OFFSET);
             GLES20.glVertexAttribPointer(maPositionHandle, 3, GLES20.GL_FLOAT, false,
                     TRIANGLE_VERTICES_DATA_STRIDE_BYTES, mTriangleVertices);
-            checkGlError("glVertexAttribPointer maPosition");
             GLES20.glEnableVertexAttribArray(maPositionHandle);
-            checkGlError("glEnableVertexAttribArray maPositionHandle");
 
             mTriangleVertices.position(TRIANGLE_VERTICES_DATA_UV_OFFSET);
             GLES20.glVertexAttribPointer(maTextureHandle, 2, GLES20.GL_FLOAT, false,
                     TRIANGLE_VERTICES_DATA_STRIDE_BYTES, mTriangleVertices);
-            checkGlError("glVertexAttribPointer maTextureHandle");
             GLES20.glEnableVertexAttribArray(maTextureHandle);
-            checkGlError("glEnableVertexAttribArray maTextureHandle");
 
             Matrix.setIdentityM(mMVPMatrix, 0);
             GLES20.glUniformMatrix4fv(muMVPMatrixHandle, 1, false, mMVPMatrix, 0);
             GLES20.glUniformMatrix4fv(muSTMatrixHandle, 1, false, mSTMatrix, 0);
 
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-            checkGlError("glDrawArrays");
 
             // IMPORTANT: on some devices, if you are sharing the external texture between two
             // contexts, one context may not see updates to the texture unless you un-bind and
@@ -812,25 +793,18 @@ public class CameraToMpegTest extends AndroidTestCase {
          */
         public void surfaceCreated() {
             mProgram = createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-            if (mProgram == 0) {
-                throw new RuntimeException("failed creating program");
-            }
+
             maPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition");
-            checkLocation(maPositionHandle, "aPosition");
             maTextureHandle = GLES20.glGetAttribLocation(mProgram, "aTextureCoord");
-            checkLocation(maTextureHandle, "aTextureCoord");
 
             muMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
-            checkLocation(muMVPMatrixHandle, "uMVPMatrix");
             muSTMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uSTMatrix");
-            checkLocation(muSTMatrixHandle, "uSTMatrix");
 
             int[] textures = new int[1];
             GLES20.glGenTextures(1, textures, 0);
 
             mTextureID = textures[0];
             GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureID);
-            checkGlError("glBindTexture mTextureID");
 
             GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER,
                     GLES20.GL_NEAREST);
@@ -840,7 +814,6 @@ public class CameraToMpegTest extends AndroidTestCase {
                     GLES20.GL_CLAMP_TO_EDGE);
             GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T,
                     GLES20.GL_CLAMP_TO_EDGE);
-            checkGlError("glTexParameter");
         }
 
         /**

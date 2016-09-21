@@ -21,7 +21,8 @@
         </activity>
         <activity android:name=".EncodeCameraActivity" />
         <activity android:name=".EncoderSurfaceActivity" />
-        <activity android:name=".DecodeMp4Activity"/>
+        <activity android:name=".DecodeMp4Activity" />
+        <activity android:name=".openGLEncode.EncodeOpenGLCameraActivity"></activity>
     </application>
 
 </manifest>
